@@ -5,7 +5,6 @@ const client = require("twilio")(
   "ACbf3be024152b47cd3dd395604494e715",
   "a6ac2299db5162d37f32df3108b753d9",
   {
-    edge: "api.twilio.com", // Указываем явно адрес API
     useSecureTransport: true, // Убеждаемся, что используется безопасный транспорт (https)
   }
 );
