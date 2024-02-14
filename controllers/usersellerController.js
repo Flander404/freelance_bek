@@ -1,5 +1,4 @@
 const ApiError = require("../error/ApiError");
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { UserSeller } = require("../models/models");
 const client = require("twilio")(
