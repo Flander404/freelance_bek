@@ -3,10 +3,7 @@ const jwt = require("jsonwebtoken");
 const { UserSeller } = require("../models/models");
 const client = require("twilio")(
   "ACbf3be024152b47cd3dd395604494e715",
-  "a6ac2299db5162d37f32df3108b753d9",
-  {
-    useSecureTransport: true, // Убеждаемся, что используется безопасный транспорт (https)
-  }
+  "a6ac2299db5162d37f32df3108b753d9"
 );
 
 const generateJwt = (id, email, role, name, number, inn) => {
