@@ -51,7 +51,6 @@ class UsersellerController {
           confirmationCode: code,
           confirmed: false,
         });
-
         await client.messages.create({
           body: `Ваш код подтверждения: ${code}`,
           from: "+16592465741",
