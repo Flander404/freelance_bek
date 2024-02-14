@@ -3,7 +3,11 @@ const jwt = require("jsonwebtoken");
 const { UserSeller } = require("../models/models");
 const client = require("twilio")(
   "ACbf3be024152b47cd3dd395604494e715",
-  "a6ac2299db5162d37f32df3108b753d9"
+  "a6ac2299db5162d37f32df3108b753d9",
+  {
+    edge: "api.twilio.com", // Указываем явно адрес API
+    useSecureTransport: true, // Убеждаемся, что используется безопасный транспорт (https)
+  }
 );
 
 const generateJwt = (id, email, role, name, number, inn) => {
@@ -122,7 +126,9 @@ class UsersellerController {
         where: { number, confirmationCode },
       });
       if (!user) {
-        return next(ApiError.badRequest("Неверный код подтверждения или номер телефона"));
+        return next(
+          ApiError.badRequest("Неверный код подтверждения или номер телефона")
+        );
       }
       if (user.confirmed === true) {
         const token = generateJwt(
