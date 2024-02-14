@@ -1,10 +1,7 @@
 const ApiError = require("../error/ApiError");
 const jwt = require("jsonwebtoken");
 const { UserSeller } = require("../models/models");
-const client = require("twilio")(
-  "ACbf3be024152b47cd3dd395604494e715",
-  "a6ac2299db5162d37f32df3108b753d9"
-);
+const axios = require("axios");
 
 const generateJwt = (id, email, role, name, number, inn) => {
   return jwt.sign(
@@ -15,6 +12,14 @@ const generateJwt = (id, email, role, name, number, inn) => {
     }
   );
 };
+const headers = {
+  Authorization:
+    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTA0ODY1OTcsImlhdCI6MTcwNzg5NDU5Nywicm9sZSI6InRlc3QiLCJzaWduIjoiMDRkZmYzNDA2NzJjNjdiZDBlZDI3MmU2N2I3ZTRlY2M2OTJmMzMwMjMyZmNlZTkyMDc1ODg3ZDA4NDZiODUyNSIsInN1YiI6IjY0MzcifQ.g1W-DPl2KnK4JAKkkblR9eXeYwu5vLcQtp1ajQkNShQ", // Замените на свой реальный токен доступа
+  "Content-Type": "application/json",
+  Accept: "application/json",
+};
+
+const msgApi = "https://notify.eskiz.uz/api/message/sms/send";
 
 class UsersellerController {
   async registration(req, res, next) {
@@ -30,12 +35,21 @@ class UsersellerController {
             { confirmationCode: code },
             { where: { number } }
           );
-          await client.messages.create({
-            body: `Ваш код подтверждения: ${code}`,
-            from: "+16592465741",
-            to: usernumber.number,
-          });
-          return res.json({ message: "Ваш код отправлен на ваш номер" });
+          const sendMsg = {
+            mobile_phone: usernumber.number,
+            message: code,
+            from: "4546",
+          };
+          axios
+            .post(msgApi, sendMsg, { headers })
+            .then((response) => {
+              console.log(response);
+              return res.json({ message: "Ваш код отправлен на ваш номер" });
+            })
+            .catch((error) => {
+              console.log(error);
+              return res.json({ message: "Ошибка при отправке sms сообщения" });
+            });
         }
       }
       if (!usernumber) {
@@ -50,12 +64,21 @@ class UsersellerController {
           confirmationCode: code,
           confirmed: false,
         });
-        await client.messages.create({
-          body: `Ваш код подтверждения: ${code}`,
-          from: "+16592465741",
-          to: user.number,
-        });
-        return res.json({ message: "Ваш код отправлен на ваш номер" });
+        const sendMsg = {
+          mobile_phone: user.number,
+          message: code,
+          from: "4546",
+        };
+        axios
+          .post(msgApi, sendMsg, { headers })
+          .then((response) => {
+            console.log(response);
+            return res.json({ message: "Ваш код отправлен на ваш номер" });
+          })
+          .catch((error) => {
+            console.log(error);
+            return res.json({ message: "Ошибка при отправке sms сообщения" });
+          });
       }
     } catch (error) {
       console.log(error);
@@ -174,11 +197,21 @@ class UsersellerController {
             },
             { where: { number } }
           );
-          await client.messages.create({
-            body: `Ваш код подтверждения: ${code}`,
-            from: "+16592465741",
-            to: user.number,
-          });
+          const sendMsg = {
+            mobile_phone: user.number,
+            message: code,
+            from: "4546",
+          };
+          axios
+            .post(msgApi, sendMsg, { headers })
+            .then((response) => {
+              console.log(response);
+              return res.json({ message: "Ваш код отправлен на ваш номер" });
+            })
+            .catch((error) => {
+              console.log(error);
+              return res.json({ message: "Ошибка при отправке sms сообщения" });
+            });
           return res.json({ message: "Ваш код отправлен на ваш номер" });
         }
         if (user.confirmed === false) {
