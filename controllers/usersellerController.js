@@ -3,9 +3,9 @@ const jwt = require("jsonwebtoken");
 const { UserSeller } = require("../models/models");
 const axios = require("axios");
 
-const generateJwt = (id, email, role, name, number, inn) => {
+const generateJwt = (id, email, role, name, number, inn, type) => {
   return jwt.sign(
-    { id, email, role, name, number, inn },
+    { id, email, role, name, number, inn, type },
     process.env.SECRET_KEY,
     {
       expiresIn: "24h",
@@ -23,7 +23,7 @@ const msgApi = "https://notify.eskiz.uz/api/message/sms/send";
 
 class UsersellerController {
   async registration(req, res, next) {
-    const { email, role, name, number, inn } = req.body;
+    const { email, role, name, number, inn, type } = req.body;
     try {
       const usernumber = await UserSeller.findOne({ where: { number } });
       if (usernumber) {
@@ -61,6 +61,7 @@ class UsersellerController {
           name,
           number,
           inn,
+          type,
           confirmationCode: code,
           confirmed: false,
         });
@@ -85,58 +86,6 @@ class UsersellerController {
       return next(ApiError.badRequest("Ошибка при регестрации"));
     }
   }
-  // async registration(req, res, next) {
-  //   const { email, role, name, number, inn } = req.body; // изменено на inn
-  //   if (!inn || !number) {
-  //     return next(ApiError.badRequest("Некорректный ИНН или НОМЕР"));
-  //   }
-
-  //   try {
-  //     const code = Math.floor(1000 + Math.random() * 9000).toString();
-
-  //     const user = await UserSeller.create({
-  //       email,
-  //       role,
-  //       name,
-  //       number,
-  //       inn,
-  //       confirmationCode: code,
-  //       confirmed: false,
-  //     });
-
-  //     await client.messages.create({
-  //       body: `Ваш код подтверждения: ${code}`,
-  //       from: "+16592465741",
-  //       to: user.number,
-  //     });
-  //     const existingNumber = await UserSeller.findOne({ where: { number } }); // изменено на inn
-  //     if (existingNumber.confirmed === true) {
-  //       return next(
-  //         ApiError.badRequest("Пользователь с таким номером уже существует")
-  //       );
-  //     }
-
-  //     const existingInn = await UserSeller.findOne({ where: { inn } });
-  //     if (existingInn) {
-  //       return next(
-  //         ApiError.badRequest("Пользователь с таким ИНН уже существует")
-  //       );
-  //     }
-  //     if (existingNumber.confirmed === false) {
-  //       const code = Math.floor(1000 + Math.random() * 9000).toString();
-  //       await client.messages.create({
-  //         body: `Ваш код подтверждения: ${code}`,
-  //         from: "+16592465741",
-  //         to: user.number,
-  //       });
-  //     }
-
-  //     return res.json({ message: "Ваш код отправлен на ваш номер" });
-  //   } catch (error) {
-  //     console.log(error);
-  //     return next(ApiError.badRequest("Ошибка при регистрации"));
-  //   }
-  // }
   async confirmRegistration(req, res, next) {
     const { number, confirmationCode } = req.body;
 
@@ -156,7 +105,8 @@ class UsersellerController {
           user.role,
           user.name,
           user.number,
-          user.inn
+          user.inn,
+          user.type
         );
         return res.json({ message: "Вы успешно вошли", token });
       } else if (user.confirmed === false) {
@@ -170,7 +120,8 @@ class UsersellerController {
           user.role,
           user.name,
           user.number,
-          user.inn
+          user.inn,
+          user.type
         );
 
         return res.json({ message: "Вы успешно прошли регистрацию", token });
@@ -224,12 +175,36 @@ class UsersellerController {
     }
   }
 
-  async check(req, res, next) {
-    const { id } = req.query;
-    if (!id) {
-      return next(ApiError.badRequest("Не задано ID"));
+  async varify_inn(req, res, next) {
+    const { inn } = req.body;
+
+    try {
+      const user = await UserSeller.findOne({ where: { inn } });
+      if (user) {
+        return res.json({ message: "Это INN уже существует" });
+      } else {
+        return res.json({ message: "Это INN не существует" });
+      }
+    } catch (error) {
+      console.log(error);
+      return res.json({ message: "Ошибка при проверке INN" });
     }
-    res.json(id);
+  }
+  async getuser(req, res, next) {
+    try {
+      const user = req.user
+      
+
+      if (!user) {
+        return res
+          .status(401)
+          .json({ message: "Пользователь не аутентифицирован" });
+      }
+      return res.json(user);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Ошибка при get запросе" });
+    }
   }
 }
 
